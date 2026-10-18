@@ -6,7 +6,7 @@ Windows 本地桌面工具：快速记录、找回任务与资料、接续上次
 
 当前开发版本 **0.5.0 / 数据库版本7**。发布、部署及实际验证状态见 [实施记录](docs/implementation-plan.md)，后续打磨见 [优化记录](docs/optimization-log.md)。
 
-软件发布入口：[GitHub Releases](https://github.com/Hin1120X/ReCall/releases)。请下载 Assets 中的完整 Windows ZIP，办公室无需安装开发环境。后续升级见 [发布与升级说明](docs/github-releases.md)。
+软件发布入口：[下载最新 Windows 版本](https://github.com/Hin1120X/ReCall/releases/latest)。请下载 Assets 中的完整 Windows ZIP，办公室无需安装开发环境；Source code 是源码归档。后续升级见 [发布与升级说明](docs/github-releases.md)。
 
 ## 日常使用
 

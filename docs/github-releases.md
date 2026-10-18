@@ -4,6 +4,8 @@ GitHub 用于保存 Recall 源码和发布 Windows 软件包。办公室任务�
 
 已确认使用公开仓库 [Hin1120X/ReCall](https://github.com/Hin1120X/ReCall)，办公室可直接访问 [Releases](https://github.com/Hin1120X/ReCall/releases) 下载软件。本地接续原有 README 初始提交，GitHub 浏览器登录及推送预检通过；用户允许沿用已核实的 Hin1120X 及 GitHub 隐私邮箱，仅为本项目配置提交身份。云端构建与发布结果见 [Actions](https://github.com/Hin1120X/ReCall/actions) 和 [实施记录](implementation-plan.md)；工作流文件存在不代表执行成功。
 
+首次 [Recall 0.5.0](https://github.com/Hin1120X/ReCall/releases/tag/v0.5.0) 已于2026-10-19发布，CI与Release工作流均成功。已匿名下载公开软件ZIP，核对外部SHA-256、全部138个程序文件及离线升级预览；本机原程序和业务数据未替换。
+
 ## 自动检查与发布范围
 
 - `.github/workflows/ci.yml`：推送 `main` 或提交 PR 时，在 GitHub 托管的 Windows x64 环境使用 Node.js 24，执行 `npm ci`、类型检查、单元测试和构建。仓库权限为只读。
@@ -36,7 +38,7 @@ GitHub 用于保存 Recall 源码和发布 Windows 软件包。办公室任务�
 
 ## 办公室首次部署
 
-1. 打开 [Recall 最新发布入口](https://github.com/Hin1120X/ReCall/releases/latest)。当前仓库为公开仓库，下载无需登录；首个正式 Release 发布后此入口才指向具体版本。
+1. 打开 [Recall 最新发布入口](https://github.com/Hin1120X/ReCall/releases/latest)。当前仓库为公开仓库，下载无需登录；此入口始终指向标记为 Latest 的正式发布版。
 2. 在该版本的 Assets 中下载 **`Recall-版本-Windows-x64.zip`**，并保留对应的 **`.zip.sha256`**。页面自动附带的 **Source code (zip/tar.gz)** 是源码，不是可运行的软件包。
 3. 将软件 ZIP 完整解压到本机程序目录，双击其中 `Recall.exe`。不能只复制 EXE；办公室无需安装 Node.js、npm、Git 或下载项目源码。
 4. 首次使用选择建立新记录；已有旧版记录则按接续提示选择原数据。正式数据位置为 `%LOCALAPPDATA%\Recall\data`，默认备份位于 `%LOCALAPPDATA%\Recall\backups`，以设置页显示的实际路径为准。
