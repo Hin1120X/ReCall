@@ -1,0 +1,15 @@
+import { build } from 'esbuild';
+import { mkdir, copyFile, cp, rm } from 'node:fs/promises';
+await mkdir('dist', { recursive: true });
+for(const file of ['library.js','library.html','library.css'])await rm('dist/'+file,{force:true});
+await build({ entryPoints: ['src/main.ts'], outfile: 'dist/main.cjs', bundle: true, platform: 'node', format: 'cjs', external: ['electron', 'uiohook-napi'] });
+await build({ entryPoints: ['src/preload.ts'], outfile: 'dist/preload.cjs', bundle: true, platform: 'node', format: 'cjs', external: ['electron'] });
+await build({ entryPoints: ['src/renderer.ts'], outfile: 'dist/renderer.js', bundle: true, platform: 'browser', target: 'es2022' });
+await build({ entryPoints: ['src/launcher.ts'], outfile: 'dist/launcher.js', bundle: true, platform: 'browser', target: 'es2022' });
+await build({ entryPoints: ['src/update-helper.ts'], outfile: 'dist/update-helper.cjs', bundle: true, platform: 'node', format:'cjs' });
+await copyFile('src/index.html', 'dist/index.html');
+await copyFile('src/style.css', 'dist/style.css');
+await copyFile('src/manager.html', 'dist/manager.html');
+await copyFile('src/launcher.css', 'dist/launcher.css');
+for(const file of ['catalog-ui.css','theme.css'])await copyFile('src/'+file,'dist/'+file);
+await cp('assets/fonts','dist/fonts',{recursive:true});

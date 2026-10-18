@@ -1,0 +1,27 @@
+{
+  "name": "recall",
+  "version": "0.5.0",
+  "private": true,
+  "type": "module",
+  "description": "Recall Windows local capture",
+  "main": "dist/main.cjs",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "node scripts/test.mjs",
+    "start": "npm run build && electron .",
+    "test:desktop": "npm run build && electron . --smoke-test",
+    "package": "npm run build && node scripts/package-portable.mjs",
+    "check:opencode": "node scripts/check-opencode.mjs"
+  },
+  "dependencies": {
+    "pinyin-pro": "^3.29.5",
+    "uiohook-napi": "1.5.5"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.1",
+    "electron": "44.5.1",
+    "esbuild": "0.28.2",
+    "typescript": "7.0.2"
+  }
+}

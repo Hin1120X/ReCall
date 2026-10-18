@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Recall</title><link rel="stylesheet" href="theme.css"><link rel="stylesheet" href="catalog-ui.css"><link rel="stylesheet" href="launcher.css"></head>
+<body data-mode="search">
+<header id="bar"><span class="brand-mark" aria-hidden="true">↗</span><nav id="search-scopes" aria-label="检索范围"><button id="scope-all" aria-pressed="true">全部</button><button id="scope-tasks" aria-pressed="false">待办</button><button id="scope-links" aria-pressed="false">链接</button></nav><button id="back-search" hidden aria-label="返回搜索">←</button><span id="entry-kind" hidden></span><textarea id="entry" rows="1" aria-label="统一搜索" placeholder="搜索待办或链接…" autofocus></textarea><button id="manager" aria-label="打开工作台" title="打开工作台">☷</button></header>
+<div id="relation-chips" class="relation-chips" hidden></div>
+<footer id="quick-footer"><p id="status" role="status" aria-live="polite">↓ 看看接下来做什么 · Tab 切换 · + 新增</p><button id="resume-capture" hidden>继续待办草稿</button><button id="resume-link" hidden>继续链接草稿</button></footer>
+<section id="create-menu" aria-label="选择新增类型" hidden><button id="create-task" class="command-choice"><span>＋ 新建待办</span><small>记下一件事，Enter 收下</small></button><button id="create-link" class="command-choice"><span>↗ 新增链接</span><small>网址或本地位置，自动取名</small></button><p class="helper">Tab 切换类型 · Enter 确认 · Esc 收起并保留草稿</p></section>
+<section id="mention-panel" aria-label="选择关联项" hidden><div id="mention-results" role="listbox"></div><p class="helper">↑ ↓ 选择 · Enter / Tab 确认 · Esc 保留原文</p></section>
+<section id="results-panel" aria-label="搜索结果与建议" hidden><div class="section-heading"><h2 id="results-heading">接下来</h2><span id="results-count"></span></div><div id="results"></div><p id="results-empty" class="empty" hidden></p></section>
+<section id="capture-details" hidden><p id="legacy-attributes" class="helper" hidden>原草稿的安排与属性会保留。</p><div id="pending-files"></div><button id="choose-files">＋ 添加附件</button></section>
+<section id="checkpoint-panel" hidden><p class="checkpoint-target">留给下次的自己：<strong id="checkpoint-target"></strong></p><label for="checkpoint-text">上次停在哪里</label><textarea id="checkpoint-text" rows="3" placeholder="例如：已核对前三条，第四条还要确认…" required></textarea><label for="checkpoint-next">下次先做什么 <span class="helper">可选，留空保留原下一步</span></label><input id="checkpoint-next" placeholder="回来后可以开始的一小步"><div class="checkpoint-actions"><span class="helper">保存断点不计实际推进</span><button id="checkpoint-save">保存断点</button></div></section>
+<script src="launcher.js"></script></body></html>
