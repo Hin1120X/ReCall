@@ -8,6 +8,7 @@ import { snapshotData } from './data.ts';
 import {matchesSearch} from './search.ts';
 import {recurrenceRule,nextOccurrence} from './recurrence.ts';
 import {localSuggestions} from './workbench.ts';
+import {linkDraftKey} from './shared.ts';
 
 export type Material = { name: string; source: string } | { name: string; bytes: Uint8Array };
 export const SCHEMA_VERSION=7;
@@ -170,8 +171,8 @@ export class Store {
     const normalized=(draft:LinkDraft|null)=>{
       if(draft===null)return null;
       if(!draft||typeof draft!=='object'||Array.isArray(draft)||typeof draft.target!=='string'||draft.target.length>32767||draft.groupIds!==undefined&&(!Array.isArray(draft.groupIds)||draft.groupIds.length>100||draft.groupIds.some(id=>typeof id!=='string'||!id||id.length>100)))throw new Error('资料草稿无效');
-      const groupIds=[...new Set(draft.groupIds??[])].sort();
-      return !draft.target.trim()&&!groupIds.length?null:JSON.stringify({target:draft.target,groupIds});
+      if(draft.name!==undefined&&(typeof draft.name!=='string'||draft.name.length>200))throw new Error('链接名称最多200个字符');
+      return linkDraftKey(draft);
     };
     normalized(value);const expectedBody=expected===undefined?undefined:normalized(expected);
     this.db.exec('BEGIN IMMEDIATE');
@@ -181,7 +182,7 @@ export class Store {
       if(value===null)this.db.prepare("DELETE FROM link_drafts WHERE key='link'").run();
       else{
         const groupIds=this.checkedRelations(value,previous??{}).groupIds;
-        if(!value.target.trim()&&!groupIds.length)this.db.prepare("DELETE FROM link_drafts WHERE key='link'").run();
+        if(!linkDraftKey({...previous,...value,groupIds}))this.db.prepare("DELETE FROM link_drafts WHERE key='link'").run();
         else{
           const body=JSON.stringify({...previous,...value,groupIds});if(body.length>100000)throw new Error('资料草稿过长');
           this.db.prepare("INSERT INTO link_drafts(key,body,updatedAt) VALUES('link',?,?) ON CONFLICT(key) DO UPDATE SET body=excluded.body,updatedAt=excluded.updatedAt").run(body,new Date().toISOString());
@@ -192,9 +193,11 @@ export class Store {
   }
   createLink(input:CreateLinkInput):CatalogEntry {
     if(!input||typeof input.target!=='string')throw new Error('请输入资料地址');
+    if(input.name!==undefined&&(typeof input.name!=='string'||input.name.length>200))throw new Error('链接名称最多200个字符');
     const ref=referenceTarget(input.target),saved=this.db.prepare("SELECT body,updatedAt FROM link_drafts WHERE key='link'").get() as {body:string;updatedAt:string}|undefined,draft:LinkDraft|null=saved?JSON.parse(saved.body):null,groups=this.checkedRelations(input,draft??{}).groupIds;
-    if(draft&&(draft.target.trim()!==input.target.trim()||JSON.stringify([...(draft.groupIds??[])].sort())!==JSON.stringify([...groups].sort())))throw new Error('资料草稿已变化，请重新打开后保存');
-    return this.storeCatalog({id:null,kind:'resource',name:ref.name.slice(0,200),target:ref.target,groupIds:groups},saved??null);
+    const name=input.name??draft?.name??'';
+    if(draft&&linkDraftKey({...draft,target:draft.target.trim()})!==linkDraftKey({target:input.target.trim(),name,groupIds:groups}))throw new Error('资料草稿已变化，请重新打开后保存');
+    return this.storeCatalog({id:null,kind:'resource',name:name.trim()||ref.name.slice(0,200),target:ref.target,groupIds:groups},saved??null);
   }
   private checkedRelations(value:Relations,previous:Relations={}):Required<Relations> {
     return Object.fromEntries(relationKeys.map(key=>{

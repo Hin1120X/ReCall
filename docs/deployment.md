@@ -1,10 +1,10 @@
-# Recall 本地部署与升级（0.5.0）
+# Recall 本地部署与升级（0.5.1）
 
 家里构建、验收和生成发布包；办公室只运行构建好的 Windows 程序，办公室业务数据始终保留在该电脑。无账号、跨环境同步和联网更新服务。
 
 ## 首次部署
 
-1. 带 `Recall-0.5.0-Windows-x64.zip` 到办公室，解压整个目录，不能只复制 Recall.exe。
+1. 带 `Recall-0.5.1-Windows-x64.zip` 到办公室，解压整个目录，不能只复制 Recall.exe。
 2. 双击 Recall.exe，首次在该电脑使用时选择“首次使用，建立新记录”；已有旧版记录则选择“接续旧版记录”和原 data 文件夹。建立指向它的快捷方式。不需要 Node.js、npm、Git 或项目源码。
 3. 正式数据固定在 `%LOCALAPPDATA%\Recall\data`，备份在 `%LOCALAPPDATA%\Recall\backups`；设置页显示实际位置。运行缓存另存 `Recall\runtime`。
 4. 使用 AI 时，选择办公室本机 OpenCode v2 CLI 和模型，使用其已有认证。包中没有家里的任务、路径设置或认证。模型不通时仍能正常记录、查找、修改和保存。

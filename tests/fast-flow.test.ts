@@ -92,6 +92,37 @@ test('链接草稿的空值CAS与实际删除一致，空地址有分组仍保�
   }finally{store.close();rmSync(root,{recursive:true,force:true});}
 });
 
+test('自定义链接名称和多分组随草稿重开保留，保存时冲突和失败不会消费，名称可检索',()=>{
+  const {root,data,backups}=fixture();let store=new Store(data,{backups});
+  try{
+    const a=store.saveCatalog({id:null,kind:'group',name:'链接甲组'}),b=store.saveCatalog({id:null,kind:'group',name:'链接乙组'}),target='https://example.com/report#part';
+    store.saveLinkDraft({target:'',name:'每周报表',groupIds:[a.id,b.id]},null);
+    store.saveLinkDraft({target},store.linkDraft());store.close();store=new Store(data,{backups});
+    const snapshot=store.linkDraft()!;assert.equal(snapshot.name,'每周报表');assert.deepEqual(snapshot.groupIds,[a.id,b.id]);
+    store.saveLinkDraft({...snapshot,name:'项目报表'},snapshot);
+    assert.throws(()=>store.saveLinkDraft(null,snapshot),/另一入口变化/);
+    assert.throws(()=>store.createLink({...snapshot}),/草稿已变化/);assert.equal(store.catalog('resource').length,0);
+    store.db.exec("CREATE TEMP TRIGGER fail_named_link BEFORE INSERT ON resource_groups BEGIN SELECT RAISE(FAIL,'样例归组失败'); END");
+    assert.throws(()=>store.createLink(store.linkDraft()!),/样例归组失败/);assert.equal(store.linkDraft()?.name,'项目报表');assert.equal(store.catalog('resource').length,0);store.db.exec('DROP TRIGGER fail_named_link');
+    const saved=store.createLink(store.linkDraft()!);assert.equal(saved.name,'项目报表');assert.equal(saved.target,target);assert.deepEqual(saved.groupIds,[a.id,b.id]);assert.equal(store.linkDraft(),null);
+    assert.equal(store.lookup({query:'项目报表',scope:'links'})[0].kind,'link');assert.equal(store.lookup({groupIds:[b.id],scope:'links'}).length,1);
+    assert.equal(store.createLink({target,name:'项目报表'}).name,'项目报表 (2)');
+    assert.equal(store.createLink({target,name:'  '}).name,'example.com/report');
+  }finally{store.close();rmSync(root,{recursive:true,force:true});}
+});
+
+test('只有链接名称的草稿不会被当空值删除，名称清空及边界校验与CAS一致',()=>{
+  const {root,data,backups}=fixture(),store=new Store(data,{backups});
+  try{
+    const named={target:'',name:'先记下名称',groupIds:[]};store.saveLinkDraft(named,null);assert.deepEqual(store.linkDraft(),named);
+    assert.throws(()=>store.saveLinkDraft(null,{target:'',groupIds:[]}),/另一入口变化/);assert.deepEqual(store.linkDraft(),named);
+    assert.throws(()=>store.saveLinkDraft({target:'',name:'x'.repeat(201)},named),/名称/);assert.deepEqual(store.linkDraft(),named);
+    assert.throws(()=>store.createLink({target:'https://example.com',name:123 as unknown as string}),/名称/);
+    store.saveLinkDraft({target:'',name:'',groupIds:[]},named);assert.equal(store.linkDraft(),null);
+    store.saveLinkDraft({target:'',name:'   '},null);assert.equal(store.linkDraft(),null);
+  }finally{store.close();rmSync(root,{recursive:true,force:true});}
+});
+
 test('断点现场、独立历史和清草稿同一事务，冲突失败保留；不冒充实际进展',()=>{
   const {root,data,backups}=fixture(),store=new Store(data,{backups});
   try{

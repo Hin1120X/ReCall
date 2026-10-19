@@ -73,7 +73,7 @@ else void app.whenReady().then(async () => {
   const managerPage = pathToFileURL(join(__dirname,'manager.html')).href;
   let manager: BrowserWindow | null = null;
   let launcherReady=false,pendingShow=false;
-  const openLibrary=async()=>{await openManager();manager!.webContents.send('recall:library');};
+  const openLibrary=async(id:string|null=null)=>{if(id!==null&&(typeof id!=='string'||!store.catalog('resource','',true).some(entry=>entry.id===id)))throw new Error('链接不存在');await openManager(null,false);manager!.webContents.send('recall:library',id);};
   const applyTheme=()=>{
     if(window.isDestroyed())return;
     const color=nativeTheme.shouldUseDarkColors?'#202124':'#f8f9fb';
@@ -83,7 +83,7 @@ else void app.whenReady().then(async () => {
   };
   nativeTheme.on('updated',applyTheme);applyTheme();
   let managerReady: Promise<void> | null = null;
-  const openManager = async (id: string | null = null) => {
+  const openManager = async (id: string | null = null,home=true) => {
     if (id !== null) {store.get(id);store.touchTask(id);}
     if (!manager) {
       const area=screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).workArea;
@@ -96,14 +96,14 @@ else void app.whenReady().then(async () => {
     }
     await managerReady;
     window.hide();activateWindow(manager);
-    if (id !== null) manager.webContents.send('recall:edit',id);else manager.webContents.send('recall:home');
+    if (id !== null) manager.webContents.send('recall:edit',id);else if(home)manager.webContents.send('recall:home');
   };
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   window.webContents.on('will-navigate', event => event.preventDefault());
   window.on('close', event => { if (!quitting) { event.preventDefault(); window.hide(); } });
   const resize = (view: string, recenter = false) => {
     if(window.isDestroyed()||quitting)return;
-    const sizes: Record<string,[number,number]> = { search:[640,88],results:[680,560],capture:[560,128],link:[640,128],checkpoint:[680,360],menu:[640,190],captureAttachments:[640,240],new:[560,128],todo:[680,560],resources:[680,560],preview:[680,560],options:[640,360],note:[640,320] };
+    const sizes: Record<string,[number,number]> = { search:[640,88],results:[680,560],capture:[560,128],link:[640,128],linkDetails:[640,420],checkpoint:[680,360],menu:[640,190],captureAttachments:[640,240],new:[560,128],todo:[680,560],resources:[680,560],preview:[680,560],options:[640,360],note:[640,320] };
     if (!Object.hasOwn(sizes,view)) throw new Error('窗口状态无效');
     const bounds = window.getBounds();
     const area = recenter ? screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).workArea : screen.getDisplayMatching(bounds).workArea;
@@ -161,7 +161,7 @@ else void app.whenReady().then(async () => {
     return store.saveLinkDraft(value,expected);
   });
   handle('recall:touch-task',(id:string)=>store.touchTask(id));
-  handle('recall:library',()=>openLibrary());
+  handle('recall:library',(id:string|null=null)=>openLibrary(id));
   handle('recall:prefill',async(relations:Relations)=>{
     if(!relations||typeof relations!=='object')throw new Error('归属无效');
     for(const [field,kind] of [['groupIds','group'],['personIds','person'],['resourceIds','resource']] as const){const ids=relations[field];if(ids!==undefined&&(!Array.isArray(ids)||ids.length>100||new Set(ids).size!==ids.length||ids.some(id=>typeof id!=='string'||!store.catalog(kind,'',true).some(entry=>entry.id===id))))throw new Error('关联不存在');}

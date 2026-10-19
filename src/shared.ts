@@ -15,9 +15,10 @@ export type LookupInput={query?:string;scope?:SearchScope;groupIds?:string[];per
 export type SearchResult={kind:'task';item:Item;match:string}|{kind:'link';entry:CatalogEntry;match:string};
 export type Suggestion={item:Item;reason:string;context:{text:string;source:'checkpoint'|'progress'|'saved';createdAt:string|null}|null};
 export type SuggestionFilter={groupIds?:string[];personIds?:string[]};
-export type LinkDraft={target:string;groupIds?:string[]};
+export type LinkDraft={target:string;name?:string;groupIds?:string[]};
+export function linkDraftKey(value:LinkDraft|null){return value&&(value.target.trim()||value.name?.trim()||value.groupIds?.length)?JSON.stringify([value.target,value.name?.trim()??'',[...(value.groupIds??[])].sort()]):null;}
 export type CheckpointInput={id:string;expectedUpdatedAt:string;text:string;nextStep?:string;draftKey?:string};
-export type CreateLinkInput={target:string;groupIds?:string[]};
+export type CreateLinkInput=LinkDraft;
 export type TaskFilter = Relations & {query?:string;status?:'open'|'done'|'all';limit?:number;recent?:boolean};
 export type AppSettings = {openAtLogin:boolean;resourceShortcut:string;shortcutError?:string};
 export type UpdatePreview = {token:string;version:string;files:number};
@@ -59,7 +60,7 @@ export type RecallAPI = {
   openResource(id:string):Promise<void>;
   queryTasks(filter:TaskFilter):Promise<Item[]>;
   touchTask(id:string):Promise<void>;
-  openLibrary():Promise<void>;
+  openLibrary(resourceId?:string|null):Promise<void>;
   prefillCapture(relations:Relations):Promise<void>;
   onPrefill(callback:(relations:Relations)=>void):void;
   appSettings():Promise<AppSettings>;
@@ -83,12 +84,12 @@ export type RecallAPI = {
   saveDraft(key:string,value:DraftValue):Promise<void>;
   dataInfo():Promise<{directory:string;backups:string;version:string;schema:number}>;
   onHome(callback:()=>void):void;
-  onLibrary(callback:()=>void):void;
+  onLibrary(callback:(resourceId:string|null)=>void):void;
   analyze(request: AnalysisRequest): Promise<{ ok: true; analysis: Analysis } | { ok: false; message: string }>;
   analyses(itemId: string | null): Promise<Analysis[]>;
   item(id: string): Promise<Item>;
   openManager(itemId?: string | null): Promise<void>;
-  view(view: 'search'|'results'|'capture'|'link'|'checkpoint'|'menu'|'captureAttachments'|'new'|'todo'|'options'|'note'|'resources'|'preview'): Promise<void>;
+  view(view: 'search'|'results'|'capture'|'link'|'linkDetails'|'checkpoint'|'menu'|'captureAttachments'|'new'|'todo'|'options'|'note'|'resources'|'preview'): Promise<void>;
   addNote(itemId:string,text:string,kind:NoteKind,pending:string[],draftKey?:string,extra?:Extra):Promise<Item>;
   addReference(itemId:string,target:string,role:Role):Promise<Item>;
   chooseReference(itemId:string,kind:'file'|'folder',role:Role):Promise<Item|null>;

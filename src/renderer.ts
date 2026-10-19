@@ -218,6 +218,7 @@ $('opencode-check').onclick=()=>void connectionAction(async()=>{await saveConnec
 $('today').textContent=new Date().toLocaleDateString('zh-CN',{month:'long',day:'numeric',weekday:'long'});
 const boot=api.drafts().then(async values=>{stored=values;await refresh();navigate('all');});
 api.onEdit(id=>void boot.then(()=>openItem(id)).catch(error=>status(String(error),true)));api.onHome(()=>void boot.then(()=>{if(busy)deferredOpen=()=>navigate('all');else navigate('all');}).catch(error=>status(String(error),true)));
-api.onLibrary(()=>void boot.then(()=>{if(busy)deferredOpen=()=>navigate('links');else navigate('links');}).catch(error=>status(String(error),true)));
+async function showLink(id:string|null){if(busy){deferredOpen=()=>void showLink(id).catch(error=>status(String(error),true));return;}if($<HTMLDialogElement>('property-dialog').open)throw new Error('请先保存或取消属性编辑');const revision=++openRevision;await catalogManager?.flush();await linksManager?.flush();if(revision!==openRevision)return;navigateNow('links');if(id){await linksManager!.refresh();if(revision===openRevision&&view==='links')linksManager!.editEntry(id);}}
+api.onLibrary(id=>void boot.then(()=>showLink(id)).catch(error=>status(String(error),true)));
 void boot.catch(error=>status('读取失败，原数据未覆盖：'+String(error),true));
 setInterval(()=>{if(!busy&&document.visibilityState==='visible')void refresh().catch(error=>status(String(error),true));},2000);
