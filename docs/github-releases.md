@@ -6,7 +6,9 @@ GitHub 用于保存 Recall 源码和发布 Windows 软件包。办公室任务�
 
 首次 [Recall 0.5.0](https://github.com/Hin1120X/ReCall/releases/tag/v0.5.0) 已于2026-10-19发布，CI与Release工作流均成功。已匿名下载公开软件ZIP，核对外部SHA-256、全部138个程序文件及离线升级预览；本机原程序和业务数据未替换。
 
-当前最新修订版 [Recall 0.5.1](https://github.com/Hin1120X/ReCall/releases/tag/v0.5.1) 补充链接新增时的可选名称/分组及搜索直达编辑，CI、自动发布、公开下载和升级包校验均通过。办公室已有0.5.0时仍按下述离线升级流程使用0.5.1完整ZIP；无需重新建立数据库。
+修订版 [Recall 0.5.1](https://github.com/Hin1120X/ReCall/releases/tag/v0.5.1) 补充链接新增时的可选名称/分组及搜索直达编辑，CI、自动发布、公开下载和升级包校验均通过。
+
+当前最新修订版 [Recall 0.5.2](https://github.com/Hin1120X/ReCall/releases/tag/v0.5.2) 按用户要求取消链接自动取名：新增时默认显示名称，必须由用户填写；分组可选。CI、自动发布、匿名下载、全部138文件及升级包校验均通过。办公室已有旧版时按下述流程选择较新的完整ZIP，无需重新建立数据库。
 
 ## 自动检查与发布范围
 
