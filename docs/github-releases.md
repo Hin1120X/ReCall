@@ -10,6 +10,8 @@ GitHub 用于保存 Recall 源码和发布 Windows 软件包。办公室任务�
 
 当前最新修订版 [Recall 0.5.2](https://github.com/Hin1120X/ReCall/releases/tag/v0.5.2) 按用户要求取消链接自动取名：新增时默认显示名称，必须由用户填写；分组可选。CI、自动发布、匿名下载、全部138文件及升级包校验均通过。办公室已有旧版时按下述流程选择较新的完整ZIP，无需重新建立数据库。
 
+2026-10-20起，用户授权每轮开发完成默认推送GitHub、发布程序版本并部署到本机，不再分别等待指令。开发机正式目录已由0.4.0升级至0.5.2并正常启动；升级前完整备份和升级后原记录、草稿、文件保全核对通过。办公室仍使用下述离线升级流程，不同步家里的业务数据。仅文档改动不另发程序版本。
+
 ## 自动检查与发布范围
 
 - `.github/workflows/ci.yml`：推送 `main` 或提交 PR 时，在 GitHub 托管的 Windows x64 环境使用 Node.js 24，执行 `npm ci`、类型检查、单元测试和构建。仓库权限为只读。
@@ -25,7 +27,7 @@ GitHub 用于保存 Recall 源码和发布 Windows 软件包。办公室任务�
 
 1. 提交准备发布的改动，确认本机相关检查及桌面验收通过。只从已验收的 `main` 提交创建发布标签。
 2. 新版本先更新 `package.json` 和 `package-lock.json`。例如下一个修订版可运行 `npm version patch --no-git-tag-version`，随后更新版本说明并提交；不要为重发同一个包移动旧标签。
-3. 已配置正确远程仓库后，在 PowerShell 中读取版本、创建标签并推送。以下命令供正式发布时执行，当前准备工作不会执行推送：
+3. 已配置正确远程仓库后，在 PowerShell 中读取版本、创建标签并推送：
 
    ```powershell
    $releaseVersion = (Get-Content -LiteralPath package.json -Raw | ConvertFrom-Json).version
@@ -35,6 +37,8 @@ GitHub 用于保存 Recall 源码和发布 Windows 软件包。办公室任务�
    ```
 
 4. 在仓库的 Actions 页面检查 Release 工作流全部成功，再进入 Releases，确认相应版本含两个软件附件。首次接入仍须在 GitHub 实际跑通，不能以本地 YAML 检查替代。
+
+5. 核对公开发布包的SHA-256及程序清单，完整备份本机业务数据、保存草稿并正常退出Recall，部署到本机正式目录并重新启动；核对版本、迁移完整性、原记录和文件保全。分别记录GitHub发布及本机部署结果，不能只交付压缩包就结束。
 
 版本不匹配、检查失败、软件包缺失或哈希不一致都会阻止发布。若发布因网络或权限失败，先检查 Releases：尚未创建 Release 时可重跑失败的工作流；已有同标签 Release 时不要强制覆盖、删标签重发，应核对现有附件，再用新版本号发布修正。
 
