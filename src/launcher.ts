@@ -87,7 +87,7 @@ async function beginCapture(seed:string){
   if(!ready||saving||composing)return;sync();closeMention();await work(async()=>{await flush();stored=await api.drafts();const fresh=stored.capture??{text:'',pending:[]};values.set('capture',structuredClone(fresh));const result=captureFromSearch(fresh,seed,filters);capture=result.value;mode='capture';paint();sync();status(result.resumed?'已恢复原待办草稿，未覆盖内容或安排；Enter 保存 · Esc 保留':'Enter 收下 · Shift+Enter 换行 · # 分组 · @ 资料 · to 人');});
 }
 async function beginLink(seed:string){
-  if(!ready||saving||composing)return;sync();closeMention();await work(async()=>{await flush();link=await api.linkDraft();lastPersistedLink=structuredClone(link);values.set('link',structuredClone(link));const resumed=hasLinkDraft();if(!resumed)link={target:seed,groupIds:[...filters.groupIds]};linkDetailsOpen=!!link?.name?.trim();linkGroups.setValue({groupIds:link?.groupIds??[]});await linkGroups.refresh();mode='link';paint();sync();status(resumed?'已恢复原链接草稿，名称和分组均保留':'Enter 直接保存 · 名称 / 分组可选 · Ctrl+Enter 展开');});
+  if(!ready||saving||composing)return;sync();closeMention();await work(async()=>{await flush();link=await api.linkDraft();lastPersistedLink=structuredClone(link);values.set('link',structuredClone(link));const resumed=hasLinkDraft();if(!resumed)link={target:seed,groupIds:[...filters.groupIds]};linkDetailsOpen=true;linkGroups.setValue({groupIds:link?.groupIds??[]});await linkGroups.refresh();mode='link';paint();sync();status(resumed?'已恢复原链接草稿，名称和分组均保留':'填写名称后 Enter 保存 · 分组可选');});
 }
 async function beginCheckpoint(item:Item){
   if(!ready||saving||composing)return;sync();closeMention();await work(async()=>{await flush();const token=++request,[current,drafts]=await Promise.all([api.item(item.id),api.drafts()]);if(token!==request||mode!=='search')return;stored=drafts;const saved=stored['checkpoint:'+item.id];checkpointItem=current;checkpointDraft={...(saved??{text:'',pending:[]}),itemId:item.id,expectedUpdatedAt:saved?.expectedUpdatedAt??current.updatedAt};values.set('checkpoint:'+item.id,structuredClone(checkpointDraft));mode='checkpoint';paint();$('checkpoint-target').textContent=current.text.split('\n')[0]||'附件事项';$<HTMLTextAreaElement>('checkpoint-text').value=checkpointDraft.text;$<HTMLInputElement>('checkpoint-next').value=checkpointDraft.nextStep??'';$('checkpoint-text').focus();status('留一句话，下次接着做 · Ctrl+Enter 保存 · Esc 保留');});}
@@ -96,6 +96,7 @@ async function save(){
   if(saving||composing||!ready)return;sync();if(mode==='search')return;
   if(mode==='checkpoint'&&!checkpointDraft?.text.trim()){status('请写下上次停在哪里。',true);$('checkpoint-text').focus();return;}
   if(mode==='link'&&!link?.target.trim()){status('请粘贴网址或本地完整位置。',true);entry.focus();return;}
+  if(mode==='link'&&!link?.name?.trim()){linkDetailsOpen=true;paint();status('请先为链接填写名称，尚未创建。',true);linkName.focus();return;}
   if(mode==='capture'&&!capture.text.trim()&&!capture.pending.length){status('先记下一件事，或放入附件。',true);entry.focus();return;}
   await work(async()=>{
     await flush();
@@ -137,7 +138,7 @@ $('create-task').onclick=()=>{menuSelected=0;activateMenu();};$('create-link').o
 $('back-search').onclick=returnSearch;$('manager').onclick=()=>{sync();void api.openManager(mode==='checkpoint'?checkpointItem?.id:null).catch(error=>status(String(error),true));};
 $('resume-capture').onclick=()=>beginCapture('');$('resume-link').onclick=()=>beginLink('');$('checkpoint-save').onclick=()=>void save();$('checkpoint-text').oninput=sync;$('checkpoint-next').oninput=sync;
 function toggleLinkDetails(){if(mode!=='link'||saving||composing)return;sync();linkDetailsOpen=!linkDetailsOpen;paint();status(linkDetailsOpen?'Enter 或 Ctrl+Enter 保存 · Esc 保留草稿':'Enter 直接保存 · 名称 / 分组可选 · Ctrl+Enter 展开');if(linkDetailsOpen)linkName.focus();}
-$('link-options').onclick=toggleLinkDetails;$('link-save').onclick=()=>void save();linkName.oninput=sync;
+$('link-options').onclick=toggleLinkDetails;$('link-save').onclick=()=>void save();linkName.oninput=()=>{sync();if(linkName.value.trim()&&$('status').textContent?.includes('请先为链接填写名称'))status('Enter 或 Ctrl+Enter 保存 · 分组可选');};
 linkName.onkeydown=event=>{if(event.isComposing||composing||event.keyCode===229||saving)return;if(event.key==='Enter'){event.preventDefault();event.stopPropagation();void save();}};
 async function stage(workFiles:()=>ReturnType<typeof api.chooseFiles>){if(mode!=='capture'||saving)return;sync();await work(async()=>{capture.pending.push(...await workFiles());retain('capture',capture);paint();status(capture.pending.length+' 个附件待保存 · Enter 收下');});entry.focus();}
 $('choose-files').onclick=()=>void stage(()=>api.chooseFiles());

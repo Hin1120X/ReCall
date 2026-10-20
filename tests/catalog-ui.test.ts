@@ -52,10 +52,11 @@ test('the workbench resumes the shared link draft, serializes edits and consumes
   const node=root(),manager=mountCatalogManager(asRoot(node),'resource',{onError:message=>assert.fail(message)});await manager.refresh();const input=linkInput(node);assert.equal(input.value,'https://example.com/a');
   input.value='https://example.com/ab';input.oninput?.();input.value='https://example.com/abc';input.oninput?.();await manager.flush();
   assert.equal(writes.length,2);assert.equal(writes[1].expected?.target,'https://example.com/ab');assert.deepEqual(current,{target:'https://example.com/abc',groupIds:['group']});
-  click(node,'收藏链接');await tick();await tick();assert.deepEqual(created,[{target:'https://example.com/abc',groupIds:['group']}]);assert.equal(current,null);assert.equal(input.value,'');
+  const name=node.querySelectorAll('input').find(row=>row.attributes.get('aria-label')==='新增链接名称')!;name.value='共享链接';name.oninput?.();await manager.flush();
+  click(node,'收藏链接');await tick();await tick();assert.deepEqual(created,[{target:'https://example.com/abc',groupIds:['group'],name:'共享链接'}]);assert.equal(current,null);assert.equal(input.value,'');
 });
 
-test('optional link naming and grouping use the shared draft and the saved link can be opened for editing',async()=>{
+test('user link naming and grouping use the shared draft and the saved link can be opened for editing',async()=>{
   let current:LinkDraft|null=null;const group=entry('named-group'),resources:CatalogEntry[]=[],created:LinkDraft[]=[];
   api.catalog=async(kind?:CatalogKind)=>kind==='group'?[group]:kind==='resource'?copy(resources):[group,...copy(resources)];api.linkDraft=async()=>copy(current);
   api.saveLinkDraft=async(next:LinkDraft|null,expected:LinkDraft|null)=>{assert.equal(signature(expected),signature(current));current=copy(next);};
@@ -67,6 +68,13 @@ test('optional link naming and grouping use the shared draft and the saved link 
   click(node,'收藏链接');await tick();await tick();await tick();await tick();
   assert.deepEqual(created,[{target:'https://example.com/docs#section',name:'项目文档',groupIds:[group.id]}]);assert.equal(current,null);assert.equal(name.value,'');
   manager.editEntry('named-link');const form=node.querySelector('.catalog-form')!;assert.equal(form.hidden,false);assert.equal(form.querySelector('input')!.value,'项目文档');
+});
+
+test('the workbench exposes a blank name and refuses to create an unnamed link',async()=>{
+  let current:LinkDraft|null={target:'https://example.com/legacy-draft',groupIds:[]},created=0;const errors:string[]=[];
+  api.catalog=async()=>[];api.linkDraft=async()=>copy(current);api.createLink=async()=>{created++;};api.saveLinkDraft=async(next:LinkDraft|null)=>{current=copy(next);};
+  const node=root(),manager=mountCatalogManager(asRoot(node),'resource',{onError:message=>errors.push(message)});await manager.refresh();const details=node.querySelector('.link-create-details')!,name=details.querySelector('input')!;
+  assert.equal(details.open,true);assert.equal(name.value,'');click(node,'收藏链接');await tick();assert.equal(created,0);assert.ok(errors.some(message=>message.includes('填写名称')));assert.equal(current?.target,'https://example.com/legacy-draft');assert.equal(name.value,'');
 });
 
 test('a conflicting link edit preserves both windows and blocks flush until explicit resumption',async()=>{

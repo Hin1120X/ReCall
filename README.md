@@ -4,7 +4,7 @@ ENFP‘s Working kit that make sure every mission is keeping on track
 
 Windows 本地桌面工具：快速记录、找回任务与资料、接续上次工作。无账号、云端数据库或跨电脑同步；原始交接与 prototype 仅在本机保留作参考，不上传仓库。
 
-当前开发版本 **0.5.1 / 数据库版本7**。发布、部署及实际验证状态见 [实施记录](docs/implementation-plan.md)，后续打磨见 [优化记录](docs/optimization-log.md)。
+当前开发版本 **0.5.2 / 数据库版本7**。发布、部署及实际验证状态见 [实施记录](docs/implementation-plan.md)，后续打磨见 [优化记录](docs/optimization-log.md)。
 
 软件发布入口：[下载最新 Windows 版本](https://github.com/Hin1120X/ReCall/releases/latest)。请下载 Assets 中的完整 Windows ZIP，办公室无需安装开发环境；Source code 是源码归档。后续升级见 [发布与升级说明](docs/github-releases.md)。
 
@@ -12,8 +12,8 @@ Windows 本地桌面工具：快速记录、找回任务与资料、接续上次
 
 - 双击 Shift 或 Ctrl+Alt+Space 呼起紧凑输入条，直接输入搜索任务、链接、地址、别名或拼音。Tab 在全部／待办／链接切换，Shift+Tab 反向；范围切换保留文字及分组。
 - 空输入按 ↓ 看本地工作建议：一项主建议、最多两项备选，显示依据、已有现场与下一步。打字切搜索，清空回建议；重新呼起恢复输入条。
-- 输入开头的 `+`，Tab 选新增待办／链接，Enter 进入录入；搜索中 Ctrl+Enter 直接新建待办。待办只写正文，链接只贴网址或本地完整路径，Enter 保存；无搜索结果时 Enter 不创建。
-- 添加链接时点击“名称 / 分组”或按 Ctrl+Enter，可选填名称、选择或新建分组；展开后 Ctrl+Enter 保存，名称输入框也可 Enter 保存。留空继续自动取名，草稿包含名称和分组。已存链接的搜索卡片可直接“编辑名称 / 分组”。
+- 输入开头的 `+`，Tab 选新增待办／链接，Enter 进入录入；搜索中 Ctrl+Enter 直接新建待办。待办只写正文；链接填写地址和你取的名称后保存，无搜索结果时 Enter 不创建。
+- 添加链接时名称默认展开、必须由你填写；未取名按Enter会聚焦名称，不创建链接。分组可选，可选择已有或新建分组。名称输入框Enter或Ctrl+Enter保存，草稿包含名称和分组；同名时提示你修改，不自动追加序号。已存链接的搜索卡片可直接“编辑名称 / 分组”。
 - Enter 打开任务详情或系统链接。Esc／关闭窗口只收起，托盘或设置页退出才结束程序。草稿保存在本机，不因再次呼起而覆盖。
 - 输入 `#分组名` 并选择候选后形成明确的组内筛选；普通文字命中分组名字不会自动展开全组。任务和链接共用分组，一个条目可以属于多个组，不预建项目组。
 - 新建待办可选用 `#分组`、`@链接`、`to 姓名` 关联；候选 Enter／Tab 先确认关联，中文输入法确认文字不触发保存。相关人只用于自己跟踪，不发送消息。
@@ -47,7 +47,7 @@ Windows 本地桌面工具：快速记录、找回任务与资料、接续上次
 
 `npm run typecheck`、`npm test`、`npm run build`；`npm run test:desktop` 使用隔离样例，验证实际全局双击 Shift、窗口前台焦点、录入检索、跨窗口草稿及工作台，不调用模型。
 
-`npm run package` 生成独立 `release/Recall-0.5.1`、Windows ZIP、程序清单与 ZIP 校验值，不覆盖旧版正式目录。`node scripts/check-lifecycle.mjs --exe D:\ReCall_Dev\release\Recall-0.5.1\Recall.exe` 验证旧结构样例的迁移、正常退出及重开，不接受正式 `release/Recall` 程序。
+`npm run package` 生成独立 `release/Recall-0.5.2`、Windows ZIP、程序清单与 ZIP 校验值，不覆盖旧版正式目录。`node scripts/check-lifecycle.mjs --exe D:\ReCall_Dev\release\Recall-0.5.2\Recall.exe` 验证旧结构样例的迁移、正常退出及重开，不接受正式 `release/Recall` 程序。
 
 无法完成系统前台检查的会话可运行 `node node_modules/electron/cli.js . --smoke-test --interactions-only` 验证隔离窗口内交互；报告明确标记 `actualForeground=false`，不能视为全局快捷键或系统前台验收通过。
 

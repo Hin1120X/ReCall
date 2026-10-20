@@ -35,12 +35,12 @@ module.exports=async({window,store,first,waiting,group,openManager,getManager,op
   store.saveLinkDraft({target:'https://example.invalid/shared-a',groupIds:[group.id]});await openLibrary();setActive(getManager());await wait("document.getElementById('links-view').hidden===false",'工作台链接未打开');
   await wait("document.querySelector('#links-manager .catalog-create input')?.value==='https://example.invalid/shared-a'",'工作台未接续快捷链接草稿');
   await evaluate("{const field=document.querySelector('#links-manager .catalog-create input');field.value='https://example.invalid/shared-b';field.dispatchEvent(new Event('input',{bubbles:true}));}");await until(()=>store.linkDraft()?.target==='https://example.invalid/shared-b','工作台链接草稿未保存');
-  await reveal();await input('+');await wait("document.body.dataset.mode==='menu'",'链接新建菜单未打开');await event('Tab');await event('Enter');await wait("document.body.dataset.mode==='link'&&document.getElementById('entry').value==='https://example.invalid/shared-b'",'快捷入口未接续最新链接');await event('Enter');await until(()=>store.linkDraft()===null,'链接保存未原子清草稿');
+  await reveal();await input('+');await wait("document.body.dataset.mode==='menu'",'链接新建菜单未打开');await event('Tab');await event('Enter');await wait("document.body.dataset.mode==='linkDetails'&&document.getElementById('entry').value==='https://example.invalid/shared-b'",'快捷入口未接续最新链接');await input('共享草稿链接','link-name');await event('Enter');await until(()=>store.linkDraft()===null,'链接保存未原子清草稿');
   await openLibrary();setActive(getManager());await wait("document.querySelector('#links-manager .catalog-create input')?.value==='"+"'",'工作台复活已消费链接草稿');assert.equal(store.linkDraft(),null);check('链接双入口接续、串行保存和原子消费');
-  await reveal();await input('+');await event('Tab');await event('Enter');await wait("document.body.dataset.mode==='link'",'命名链接入口未打开');
+  await reveal();await input('+');await event('Tab');await event('Enter');await wait("document.body.dataset.mode==='linkDetails'",'命名链接入口未打开');
   const targetURL='https://example.invalid/project#section',beforeLinks=store.catalog('resource').length;
-  await input(targetURL);await event('Enter',{ctrlKey:true});await wait("document.body.dataset.mode==='linkDetails'&&document.activeElement.id==='link-name'",'名称分组未展开并聚焦');
-  await input('可检索的项目入口','link-name');await wait(`Array.from(document.querySelectorAll('#link-groups .relation-options button')).some(button=>button.textContent===${JSON.stringify(group.name)})`,'链接分组候选缺失');
+  await input(targetURL);await event('Enter',{ctrlKey:true});assert.equal(store.catalog('resource').length,beforeLinks,'未填写名称不能创建');await wait("document.body.dataset.mode==='linkDetails'&&document.activeElement.id==='link-name'",'名称分组未展开并聚焦');
+  await input('可检索的项目入口','link-name');await wait("!document.getElementById('status').classList.contains('error')",'名称填写后缺名提示未清除');await wait(`Array.from(document.querySelectorAll('#link-groups .relation-options button')).some(button=>button.textContent===${JSON.stringify(group.name)})`,'链接分组候选缺失');
   await evaluate(`Array.from(document.querySelectorAll('#link-groups .relation-options button')).find(button=>button.textContent===${JSON.stringify(group.name)}).click()`);
   await until(()=>store.linkDraft()?.name==='可检索的项目入口'&&store.linkDraft()?.groupIds?.includes(group.id),'链接名称分组未存入草稿');
   await evaluate("document.getElementById('link-name').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',isComposing:true,bubbles:true}))");assert.equal(store.catalog('resource').length,beforeLinks,'输入法确认不能保存链接');
@@ -53,5 +53,5 @@ module.exports=async({window,store,first,waiting,group,openManager,getManager,op
   await wait(`Array.from(document.querySelectorAll('#links-manager .catalog-form .relation-options button')).some(button=>button.textContent===${JSON.stringify(second.name)})`,'编辑分组未刷新');
   await evaluate(`Array.from(document.querySelectorAll('#links-manager .catalog-form .relation-options button')).find(button=>button.textContent===${JSON.stringify(second.name)}).click()`);
   await evaluate("Array.from(document.querySelectorAll('#links-manager .catalog-form button')).find(button=>button.textContent==='保存').click()");await until(()=>store.catalog('resource').find(entry=>entry.id===named.id)?.name==='已修改的项目入口','修改链接名称未保存');
-  named=store.catalog('resource').find(entry=>entry.id===named.id);assert.equal(named.target,targetURL);assert.deepEqual(named.groupIds,[group.id,second.id]);check('可选链接命名归组、IME保护、草稿恢复和搜索直达编辑');
+  named=store.catalog('resource').find(entry=>entry.id===named.id);assert.equal(named.target,targetURL);assert.deepEqual(named.groupIds,[group.id,second.id]);check('新链接必须由用户取名、归组、IME保护、草稿恢复和搜索直达编辑');
 };

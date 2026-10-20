@@ -45,19 +45,21 @@ test('统一检索不因组名扩散任务，明确组过滤与资源别名地�
   }finally{store.close();rmSync(root,{recursive:true,force:true});}
 });
 
-test('资料草稿独立于任务草稿并跨重开，保存自动命名且事务失败不消费',()=>{
+test('旧链接草稿跨重开保留，用户取名后才保存且事务失败不消费',()=>{
   const {root,data,backups}=fixture();let store=new Store(data,{backups});
   try{
     const group=store.saveCatalog({id:null,kind:'group',name:'报表工作线'});store.saveDraft('capture',{text:'独立任务草稿',pending:[]});
     store.saveLinkDraft({target:'尚未输入完的地址',groupIds:[group.id]});store.close();store=new Store(data,{backups});
     assert.equal(store.linkDraft()?.target,'尚未输入完的地址');assert.throws(()=>store.createLink({target:'尚未输入完的地址'}));assert.equal(store.drafts().capture.text,'独立任务草稿');assert.ok(store.linkDraft());
     const target='https://example.com/report';store.saveLinkDraft({target});assert.deepEqual(store.linkDraft()?.groupIds,[group.id]);
+    assert.throws(()=>store.createLink({target}),/填写名称/);assert.equal(store.catalog('resource').length,0);assert.equal(store.linkDraft()?.target,target);
+    store.saveLinkDraft({target,name:'每周报表'},store.linkDraft());
     store.db.exec("CREATE TEMP TRIGGER fail_link BEFORE INSERT ON catalog_entries WHEN NEW.kind='resource' BEGIN SELECT RAISE(FAIL,'样例链接写入失败'); END");assert.throws(()=>store.createLink({target}),/样例链接/);assert.ok(store.linkDraft());store.db.exec('DROP TRIGGER fail_link');
-    const saved=store.createLink({target});assert.equal(saved.name,'example.com/report');assert.deepEqual(saved.groupIds,[group.id]);assert.equal(store.linkDraft(),null);assert.equal(store.drafts().capture.text,'独立任务草稿');assert.equal(store.items().length,0);
-    assert.equal(store.createLink({target}).name,'example.com/report (2)');
-    store.saveLinkDraft({target});store.db.exec("CREATE TEMP TRIGGER change_link_draft AFTER INSERT ON catalog_entries WHEN NEW.kind='resource' BEGIN UPDATE link_drafts SET body='{\"target\":\"https://example.com/changed\",\"groupIds\":[]}' WHERE key='link'; END");
+    const saved=store.createLink({target});assert.equal(saved.name,'每周报表');assert.deepEqual(saved.groupIds,[group.id]);assert.equal(store.linkDraft(),null);assert.equal(store.drafts().capture.text,'独立任务草稿');assert.equal(store.items().length,0);
+    assert.equal(store.createLink({target,name:'另一份报表'}).name,'另一份报表');
+    store.saveLinkDraft({target,name:'新报表'});store.db.exec("CREATE TEMP TRIGGER change_link_draft AFTER INSERT ON catalog_entries WHEN NEW.kind='resource' BEGIN UPDATE link_drafts SET body='{\"target\":\"https://example.com/changed\",\"groupIds\":[]}' WHERE key='link'; END");
     assert.throws(()=>store.createLink({target}),/草稿已变化/);assert.equal(store.linkDraft()?.target,target);assert.equal(store.catalog('resource').length,2,'草稿发生变化时资料插入也应回滚');store.db.exec('DROP TRIGGER change_link_draft');store.saveLinkDraft(null);
-    store.saveLinkDraft({target:'https://example.com/new'});assert.throws(()=>store.createLink({target:'https://example.com/other'}),/草稿已变化/);assert.equal(store.linkDraft()?.target,'https://example.com/new');store.saveLinkDraft(null);assert.equal(store.linkDraft(),null);
+    store.saveLinkDraft({target:'https://example.com/new'});assert.throws(()=>store.createLink({target:'https://example.com/other',name:'其他报表'}),/草稿已变化/);assert.equal(store.linkDraft()?.target,'https://example.com/new');store.saveLinkDraft(null);assert.equal(store.linkDraft(),null);
   }finally{store.close();rmSync(root,{recursive:true,force:true});}
 });
 
@@ -106,8 +108,9 @@ test('自定义链接名称和多分组随草稿重开保留，保存时冲突�
     assert.throws(()=>store.createLink(store.linkDraft()!),/样例归组失败/);assert.equal(store.linkDraft()?.name,'项目报表');assert.equal(store.catalog('resource').length,0);store.db.exec('DROP TRIGGER fail_named_link');
     const saved=store.createLink(store.linkDraft()!);assert.equal(saved.name,'项目报表');assert.equal(saved.target,target);assert.deepEqual(saved.groupIds,[a.id,b.id]);assert.equal(store.linkDraft(),null);
     assert.equal(store.lookup({query:'项目报表',scope:'links'})[0].kind,'link');assert.equal(store.lookup({groupIds:[b.id],scope:'links'}).length,1);
-    assert.equal(store.createLink({target,name:'项目报表'}).name,'项目报表 (2)');
-    assert.equal(store.createLink({target,name:'  '}).name,'example.com/report');
+    assert.throws(()=>store.createLink({target,name:'项目报表'}),/同名链接/);assert.equal(store.catalog('resource').length,1);
+    assert.equal(store.createLink({target,name:'项目报表副本'}).name,'项目报表副本');
+    assert.throws(()=>store.createLink({target,name:'  '}),/填写名称/);assert.equal(store.catalog('resource').length,2);
   }finally{store.close();rmSync(root,{recursive:true,force:true});}
 });
 

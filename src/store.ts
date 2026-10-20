@@ -149,8 +149,7 @@ export class Store {
       if(consumeLinkDraft!==undefined){
         const current=this.db.prepare("SELECT body,updatedAt FROM link_drafts WHERE key='link'").get() as {body:string;updatedAt:string}|undefined;
         if(consumeLinkDraft===null?!!current:current?.body!==consumeLinkDraft.body||current?.updatedAt!==consumeLinkDraft.updatedAt)throw new Error('资料草稿已变化，请重新打开后保存');
-        const names=new Set((this.db.prepare("SELECT name FROM catalog_entries WHERE kind='resource'").all() as {name:string}[]).map(entry=>entry.name.toLowerCase())),base=name;
-        for(let index=2;names.has(name.toLowerCase());index++){const suffix=' ('+index+')';name=base.slice(0,200-suffix.length)+suffix;}
+        if((this.db.prepare("SELECT name FROM catalog_entries WHERE kind='resource'").all() as {name:string}[]).some(entry=>entry.name.toLowerCase()===name.toLowerCase()))throw new Error('已存在同名链接，请换个名称，或编辑已有链接');
       }
       if(existing){const changed=this.db.prepare('UPDATE catalog_entries SET name=?,target=?,resourceKind=?,aliases=?,pinned=?,archived=?,updatedAt=? WHERE id=? AND updatedAt=?').run(name,target,resourceKind,JSON.stringify(cleanedAliases),Number(input.pinned??existing.pinned),Number(input.archived??existing.archived),now,id,existing.updatedAt);if(changed.changes!==1)throw new Error('条目已发生变化，请重新打开后保存');}
       else this.db.prepare('INSERT INTO catalog_entries(id,kind,name,target,resourceKind,aliases,pinned,archived,createdAt,updatedAt,lastUsedAt) VALUES(?,?,?,?,?,?,?,?,?,?,NULL)').run(id,input.kind,name,target,resourceKind,JSON.stringify(cleanedAliases),Number(input.pinned??false),Number(input.archived??false),now,now);
@@ -194,10 +193,12 @@ export class Store {
   createLink(input:CreateLinkInput):CatalogEntry {
     if(!input||typeof input.target!=='string')throw new Error('请输入资料地址');
     if(input.name!==undefined&&(typeof input.name!=='string'||input.name.length>200))throw new Error('链接名称最多200个字符');
-    const ref=referenceTarget(input.target),saved=this.db.prepare("SELECT body,updatedAt FROM link_drafts WHERE key='link'").get() as {body:string;updatedAt:string}|undefined,draft:LinkDraft|null=saved?JSON.parse(saved.body):null,groups=this.checkedRelations(input,draft??{}).groupIds;
+    const saved=this.db.prepare("SELECT body,updatedAt FROM link_drafts WHERE key='link'").get() as {body:string;updatedAt:string}|undefined,draft:LinkDraft|null=saved?JSON.parse(saved.body):null,groups=this.checkedRelations(input,draft??{}).groupIds;
     const name=input.name??draft?.name??'';
+    if(!name.trim())throw new Error('请先为链接填写名称');
+    const ref=referenceTarget(input.target);
     if(draft&&linkDraftKey({...draft,target:draft.target.trim()})!==linkDraftKey({target:input.target.trim(),name,groupIds:groups}))throw new Error('资料草稿已变化，请重新打开后保存');
-    return this.storeCatalog({id:null,kind:'resource',name:name.trim()||ref.name.slice(0,200),target:ref.target,groupIds:groups},saved??null);
+    return this.storeCatalog({id:null,kind:'resource',name:name.trim(),target:ref.target,groupIds:groups},saved??null);
   }
   private checkedRelations(value:Relations,previous:Relations={}):Required<Relations> {
     return Object.fromEntries(relationKeys.map(key=>{
